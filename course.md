@@ -228,16 +228,6 @@ console.log(balance); // 100
 
 
 
-
-
-
-
-
-
-for a brief conclusion on how code work there is multoply way a code goes in javascript
-
-a console.log is run sync
-
 VII) The Event Loop (Call Stack / Web APIs / Microtasks / Macrotasks)
 
 JavaScript executes your code on a single thread (one thing at a time) using the Call Stack.
