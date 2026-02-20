@@ -224,3 +224,99 @@ const acc = new BankAccount("Richie");
 acc.deposit(100);
 const balance = acc.getBalance();
 console.log(balance); // 100
+
+
+
+
+
+
+
+
+
+
+for a brief conclusion on how code work there is multoply way a code goes in javascript
+
+a console.log is run sync
+
+VII) The Event Loop (Call Stack / Web APIs / Microtasks / Macrotasks)
+
+JavaScript executes your code on a single thread (one thing at a time) using the Call Stack.
+“Asynchronous” work is possible because the runtime (Browser or Node.js) can do some work outside the JS engine, then schedule callbacks back into JS.
+
+1) Call Stack (synchronous code)
+This is where normal JavaScript runs immediately, line by line:
+- console.log
+- math / variables
+- if / for / while
+- calling functions normally
+
+When people say “console.log is sync”, they mean: when execution reaches console.log on the stack, it prints right now (it doesn’t get queued like a timer callback).
+
+2) Web APIs (Browser) / Runtime APIs (Node)
+These are not the JS engine itself.
+In the browser, “Web APIs” include things like:
+- setTimeout / setInterval
+- DOM events (click, submit, etc.)
+- fetch (network requests)
+
+In Node.js it’s similar, but implemented via Node’s runtime (libuv + OS):
+- timers
+- networking
+- file system I/O
+
+When you call something like setTimeout or fetch, the JS engine registers the operation with the runtime, and your JS continues running. When the operation completes, the runtime schedules a callback to be executed later by JS.
+
+3) Queues: Microtasks vs Macrotasks
+When the Call Stack becomes empty, the Event Loop decides what to run next.
+
+A) Microtask queue (high priority)
+Examples:
+- Promise handlers: .then(), .catch(), .finally()
+- queueMicrotask(...)
+
+Important rule:
+- After the current synchronous code finishes, JS will drain ALL microtasks before moving on to the next macrotask.
+
+B) Macrotask queue (task queue) (lower priority)
+Examples:
+- setTimeout / setInterval callbacks
+- DOM event callbacks (click, message, etc.)
+
+Important rule:
+- The event loop takes one macrotask, runs it to completion, then drains microtasks again.
+
+4) The Event Loop (scheduler)
+A simple way to remember the order:
+1. Run synchronous code (Call Stack)
+2. When stack is empty: run ALL microtasks
+3. Run the next macrotask
+4. Repeat
+
+Example (order of execution)
+console.log("A");
+
+setTimeout(() => console.log("timeout"), 0);
+
+Promise.resolve().then(() => console.log("promise"));
+
+console.log("B");
+
+Output order:
+A
+B
+promise
+timeout
+
+Why?
+- "A" and "B" are synchronous (Call Stack)
+- Promise .then() is a microtask (runs before timers)
+- setTimeout is a macrotask (runs after microtasks)
+
+Where fetch fits
+- fetch() starts the request in the runtime (Web APIs).
+- When the Promise resolves, the .then() / awaited continuation is scheduled as a microtask.
+- Also remember: fetch usually rejects only on network errors; HTTP 404/500 still resolve the fetch Promise, so you must check response.ok (unless you use axios, which rejects on non-2xx by default).
+
+Node note (quick)
+Node has extra details (phases) and process.nextTick() (very high priority), but the main mental model still holds:
+Call Stack -> Microtasks (Promises) -> Macrotasks (timers/I/O callbacks) -> loop
